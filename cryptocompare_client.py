@@ -51,7 +51,10 @@ class ccClient():
 
     def __init__(self, api_key, symbols, ticksize, end_date,
                  lookback, currency, outfile_raw, outfile_df):
-
+        
+        if isinstance(symbols, str):
+            # converts symbols to list if only one symbol is given
+            symbols = [symbols]
         self._typeCheckArgs(api_key, symbols, ticksize, end_date,
                             lookback, currency, outfile_raw, outfile_df)
         
@@ -280,6 +283,7 @@ class ccClient():
 
         if plot:
             df.plot()
+            plt.ylabel(self._currency)
             plt.show()
 
         return df
