@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timedelta
 import math
 import pandas as pd
+from matplotlib import pyplot as plt
 
 class ccClient():
     """
@@ -170,7 +171,7 @@ class ccClient():
 
         return content
 
-    def get_data(self):
+    def get_data(self, plot=False):
         """
         Gets all available data for each asset in self.symbols
         from self._start_date to self._end_date. Stores data in outfiles
@@ -276,5 +277,9 @@ class ccClient():
             json.dump(data_dict, json_file, indent=4)
 
         df.to_csv(self._outfile_df)
+
+        if plot:
+            df.plot()
+            plt.show()
 
         return df
