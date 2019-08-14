@@ -1,0 +1,10 @@
+To cite this software please use the following:
+
+Author: Dylan Scotney,
+email: dylanlewisscotney@gmail.com
+
+Title: CryptoCompare Client
+
+Version: 1.0.0
+
+Date released: 13/08/2019
