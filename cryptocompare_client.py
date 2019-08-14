@@ -228,8 +228,6 @@ class ccClient():
         for symbol in self._symbols:
             df[symbol] = 0.0  # initialise asset row in df
 
-            # Extract data from api
-            # -----------------------------------------------------------------
             data = []
 
             for i in range(1, calls_needed+1):
@@ -246,7 +244,6 @@ class ccClient():
 
                 # store extracted data
                 data.extend(content['Data'])
-            # -----------------------------------------------------------------
 
             close_times = ([datetime.fromtimestamp(item['time'])
                            for item in data])
@@ -269,7 +266,7 @@ class ccClient():
                         df[symbol][i] = df[symbol][i-1]
             # -----------------------------------------------------------------
 
-            data_dict[symbol] = data
+            data_dict[symbol] = data  # store raw data
 
             # redeclare end_stamp to pull next symbol data
             enddate_stamp = ((self._end_date - datetime(1970, 1, 1))
