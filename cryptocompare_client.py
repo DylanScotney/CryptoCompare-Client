@@ -90,7 +90,7 @@ class ccClient():
 
 
     def _typeCheckArgs(self, api_key, symbols, ticksize, end_date,
-                       lookback, outfile_raw, outfile_df):
+                       lookback, currency, outfile_raw, outfile_df):
         """
         Checks the type for input args on construction. 
         """
@@ -138,7 +138,7 @@ class ccClient():
         """
 
         if timestamp == 'none':
-            url = ("https://min-api.cryptocompare.com/data/histo{}?fsym={}&tsym={}&limit={}&api_key={}".format(self._ticksize, symbol, self._currency limit, self._key))
+            url = ("https://min-api.cryptocompare.com/data/histo{}?fsym={}&tsym={}&limit={}&api_key={}".format(self._ticksize, symbol, self._currency, limit, self._key))
         else:
             url = ("https://min-api.cryptocompare.com/data/histo{}?fsym={}&tsym={}&limit={}&toTs={}&api_key={}".format(self._ticksize, symbol, self._currency, limit, timestamp, self._key))
 
