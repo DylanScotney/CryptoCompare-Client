@@ -43,6 +43,8 @@ class ccClient():
     To Do:
     - Write conversion function that will convert data into longer 
     formats e.g. 1H ticksize -> 4H ticksize 
+    - Write methods that incorperate other functionalites of 
+    the cryptocompare API.
 
     """
 
@@ -79,9 +81,9 @@ class ccClient():
         if self._ticksize == "minute":
             return timedelta(minutes=-self._lookback)
         elif self._ticksize == "hour":
-            return = timedelta(hours=-self._lookback)
+            return timedelta(hours=-self._lookback)
         elif self._ticksize == "day":
-            return = timedelta(days=-self._lookback)
+            return timedelta(days=-self._lookback)
         else:
             raise ValueError(("Ticksize not recognised."
                              + "Use: 'day', 'hour' or 'minute'"))
@@ -95,7 +97,7 @@ class ccClient():
 
         if not isinstance(api_key, str):
             raise ValueError("api_key must be str type")
-
+        
         if not all(isinstance(symbol, str) for symbol in symbols):
             raise ValueError("Symbols must be list of string types")
 
