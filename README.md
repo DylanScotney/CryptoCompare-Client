@@ -53,3 +53,9 @@ df = client.get_data()  # Returns pandas Dataframe of close prices
 df.plot()
 plt.show()
 ```
+
+## **To Do**
+* Write conversion method that will convert data into longer formats 
+e.g. 1H ticksize -> 4H ticksize 
+* Write methods that incorperate other functionalites of the 
+cryptocompare API.
