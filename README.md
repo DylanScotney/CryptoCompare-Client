@@ -17,6 +17,7 @@ subsequent dependecies:
 * datetime
 * math
 * pandas
+* matplotlib
 
 ## **Code Overview**
 Repo currently only consists of one class ccClient that has limited
