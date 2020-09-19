@@ -17,15 +17,11 @@ subsequent dependecies:
 * datetime
 * math
 * pandas
-* matplotlib
 
 ## **Code Overview**
 Repo currently only consists of one class ccClient that has limited
 functionality. Currently only designed to get historical price data 
-of an asset or list of assets. Stores OHLCV data in raw JSON format
-and stores close prices w/ corresponding date in CSV format. 
-
-**Note**: Missing data points are extrapolated horizontally. 
+of an asset or list of assets. Stores OHLCV data in raw csv format. 
 
 **Example Usage:**
 
@@ -42,17 +38,12 @@ ticksize = "day"  # Get daily data. Can be "minute", "hour" or "day"
 currency = "USD"  # How assets are valued. Can be "USD" or "BTC"
 enddate = datetime(2019, 6, 1)  # Get data up to 01/06/2019
 lookback = 400  # Get 400 data points
-outfile_raw = "my_raw_data.json"
-outfile_df = "my_close_prices.csv"
+outfile = "my_prices.csv"
 
 client = ccClient(api_key, symbols, ticksize, enddate, lookback,
-                  currency, outfile_raw, outfile_df)
+                  currency, outfile)
 
-df = client.get_data()  # Returns pandas Dataframe of close prices
-
-# Plot data
-df.plot()
-plt.show()
+client.get_data()  
 ```
 
 ## **To Do**

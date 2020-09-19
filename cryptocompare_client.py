@@ -23,9 +23,7 @@ class ccClient():
     - lookback:             (int) number of ticks of data to request
     - currency:             (str) The currency in which to price the 
                             assets. Accepts "BTC" or "USD"
-    - outfile_raw:          (json) json file storing OHLCV data
-    - outfile_df:           (csv) csv file that stores close prices in a
-                            pandas DataFrame
+    - outfile:              (csv) csv file storing OHLCV data
 
     Members:
     - self._key:            (str) api_key (see initialisation)
@@ -36,8 +34,7 @@ class ccClient():
     - self._timedelta:      (datetime) time different between
                             self._end_date and self._start_date
     - self._lookback:       (int) lookback (see initialisation)
-    - self._outfile_raw:    (str) outfile_raw (see initialisation)
-    - self._outfile_df:     (str) outfile df (see initialisation)
+    - self._outfile:        (str) outfile (see initialisation)
     - self._limit:          (int) Cryptocompare has a limit of pulling 
                             2000 datapoints at any one time
 
@@ -50,13 +47,13 @@ class ccClient():
     """
 
     def __init__(self, api_key, symbols, ticksize, end_date,
-                 lookback, currency, outfile_raw, outfile_df):
+                 lookback, currency, outfile):
         
         if isinstance(symbols, str):
             # converts symbols to list if only one symbol is given
             symbols = [symbols]
         self._typeCheckArgs(api_key, symbols, ticksize, end_date,
-                            lookback, currency, outfile_raw, outfile_df)
+                            lookback, currency, outfile)
         
         # private memebers as to be instiated on construction only
         self._key = api_key
@@ -65,8 +62,7 @@ class ccClient():
         self._end_date = end_date
         self._lookback = lookback
         self._currency = currency
-        self._outfile_raw = outfile_raw
-        self._outfile_df = outfile_df
+        self._outfile = outfile
 
         # Free CryptoCompare API has max 2000 datapoints per pull
         self._limit = 2000
@@ -94,7 +90,7 @@ class ccClient():
 
 
     def _typeCheckArgs(self, api_key, symbols, ticksize, end_date,
-                       lookback, currency, outfile_raw, outfile_df):
+                       lookback, currency, outfile_raw):
         """
         Checks the type for input args on construction. 
         """
@@ -120,15 +116,9 @@ class ccClient():
         
         if not isinstance(outfile_raw, str):
             raise ValueError("outfile_raw variable must be a str")
-
-        if not isinstance(outfile_df, str):
-            raise ValueError("outfile_df variable must be a str")
         
-        if not outfile_raw.lower().endswith(('.json')):
-            raise ValueError("outfile_raw must be a JSON file")
-        
-        if not outfile_df.lower().endswith(('.csv')):
-            raise ValueError("outfile_df must be a csv file")
+        if not outfile_raw.lower().endswith(('.csv')):
+            raise ValueError("outfile_raw must be a csv file")
 
     def _construct_url(self, symbol, limit, timestamp='none'):
         """
@@ -174,59 +164,55 @@ class ccClient():
 
         return content
 
-    def get_data(self, plot=False):
+    def get_data(self):
         """
         Gets all available data for each asset in self.symbols
         from self._start_date to self._end_date. Stores data in outfiles
 
-        Stores raw data in JSON format in self._outfile_raw and close 
-        price dataframe in self._outfile_df.
-
-        Output:
-        - df:                   (pandas dataframe) of format:
-                                df = {
-                                      'index' : [<list of dattimes>]
-                                      'asset1': [<list of close prices>]
-                                      ...
-                                     }
+        Stores raw data in csv format in self._outfile of format:
+        columns=[
+            "ticker", 
+            "priceDate", 
+            "high", 
+            "low", 
+            "open", 
+            "close", 
+            "volumeFrom", 
+            "volumeTo"
+        ]
         
         Notes:
         - due to cryptocompares 2000 datapoint limit, calls greater than
         2000 data points will do it in several stages. E.g. for 5000
         data points will use 3 calls getting 2000, 2000 and 1000 points.
-        - Gaps in data are extrapolated horizontally. 
         """
-
-        # initialise dataframe
-        # ---------------------------------------------------------------------
-        if self._ticksize == "hour":
-            freq = '1H'
-        elif self._ticksize == "day":
-            freq = '1D'
-        elif self._ticksize == 'minute':
-            freq = '1T'
-
-        times = pd.date_range(start=self._start_date,
-                              end=self._end_date, freq=freq)
-        df = pd.DataFrame({'date': times})
-        df = df.set_index('date')
-        # ---------------------------------------------------------------------
 
         # Declare some params for extraction
         # ---------------------------------------------------------------------
-        # Enddate timestamp (ms after 01/01/1970)
+        # Enddate timestamp (seconds after 01/01/1970)
         enddate_stamp = (self._end_date - datetime(1970, 1, 1)).total_seconds()
 
         # Number of pulls needed to get self._lookback datapoints
         calls_needed = math.ceil(self._lookback/self._limit)
         final_call_limit = self._lookback % self._limit
+        # ---------------------------------------------------------------------
 
-        data_dict = {}
+        # Initialise dataframe
+        # ---------------------------------------------------------------------
+        df = pd.DataFrame(columns=[
+                                "ticker", 
+                                "priceDate", 
+                                "high", 
+                                "low", 
+                                "open", 
+                                "close", 
+                                "volumeFrom", 
+                                "volumeTo"
+                            ])
         # ---------------------------------------------------------------------
 
         # Get data for all assets
-        for symbol in self._symbols:
-            df[symbol] = 0.0  # initialise asset row in df
+        for i, symbol in enumerate(self._symbols):
 
             data = []
 
@@ -245,42 +231,34 @@ class ccClient():
                 # store extracted data
                 data.extend(content['Data'])
 
+            ticker = [symbol + "/" + self._currency for item in data]
+            open_prices = [item['open'] for item in data]
+            high_prices = [item['high'] for item in data]
+            low_prices = [item['low'] for item in data]
+            close_prices = [item['close'] for item in data]
+            volumefrom = [item['volumefrom'] for item in data]
+            volumeto = [item['volumeto'] for item in data]
+
             close_times = ([datetime.fromtimestamp(item['time'])
                            for item in data])
             if(self._ticksize == "day"):
                 close_times = [time.date() for time in close_times]
-            close_prices = [item["close"] for item in data]
 
             # Store data in dataframe
+            # Note: there has to be a more efficient way to do this
             # -----------------------------------------------------------------
-            for i in range(df.shape[0]):
-                date = df.index[i]
-                if self._ticksize == "day":
-                    date = date.date()
-                try:
-                    index = close_times.index(date)
-                    df[symbol][i] = close_prices[index]
-                except ValueError:
-                    # if no data at date, assume the previous date's data
-                    if i > 0:
-                        df[symbol][i] = df[symbol][i-1]
+            holder_df = pd.DataFrame({
+                                    "ticker": ticker, 
+                                    "priceDate": close_times, 
+                                    "high": high_prices, 
+                                    "low": low_prices, 
+                                    "open": open_prices, 
+                                    "close": close_prices, 
+                                    "volumeFrom": volumefrom, 
+                                    "volumeTo": volumeto
+                                })
+            df = df.append(holder_df)
             # -----------------------------------------------------------------
 
-            data_dict[symbol] = data  # store raw data
-
-            # redeclare end_stamp to pull next symbol data
-            enddate_stamp = ((self._end_date - datetime(1970, 1, 1))
-                             .total_seconds())        
-
-        # save raw data and dataframe
-        with open(self._outfile_raw, 'w') as json_file:
-            json.dump(data_dict, json_file, indent=4)
-
-        df.to_csv(self._outfile_df)
-
-        if plot:
-            df.plot()
-            plt.ylabel(self._currency)
-            plt.show()
-
-        return df
+        df.to_csv(self._outfile)
+        
